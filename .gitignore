@@ -1,0 +1,26 @@
+# byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# env files
+.env
+.env.local
+
+# streamlit
+.streamlit/secrets.toml
+
+# packaging
+*.egg-info/
+build/
+dist/
+
+# misc
+.DS_Store
