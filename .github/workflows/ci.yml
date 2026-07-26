@@ -53,10 +53,10 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run Ruff on application code
-        run: ruff check src streamlit_app data
+        run: ruff check src streamlit_app data --output-format=github
 
       - name: Run Ruff on tests
-        run: ruff check tests --ignore E402
+        run: ruff check tests --ignore E402 --output-format=github
 
       - name: Audit Python dependencies
         run: pip-audit -r requirements.txt
