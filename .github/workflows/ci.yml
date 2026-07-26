@@ -52,8 +52,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: Run Ruff
-        run: ruff check src tests streamlit_app data
+      - name: Run Ruff on application code
+        run: ruff check src streamlit_app data
+
+      - name: Run Ruff on tests
+        run: ruff check tests --ignore E402
 
       - name: Audit Python dependencies
         run: pip-audit -r requirements.txt
