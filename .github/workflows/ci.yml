@@ -55,26 +55,8 @@ jobs:
       - name: Run Ruff on application code
         run: ruff check src streamlit_app --output-format=concise
 
-      - name: Capture Ruff test diagnostics
-        run: |
-          set +e
-          ruff check tests --output-format=concise > ruff-tests.txt 2>&1
-          status=$?
-          cat ruff-tests.txt
-          echo "$status" > ruff-tests-status.txt
-          exit 0
-
-      - name: Upload Ruff test diagnostics
-        uses: actions/upload-artifact@v4
-        with:
-          name: ruff-test-diagnostics
-          path: |
-            ruff-tests.txt
-            ruff-tests-status.txt
-          retention-days: 3
-
-      - name: Enforce Ruff test result
-        run: test "$(cat ruff-tests-status.txt)" -eq 0
+      - name: Run Ruff on tests
+        run: ruff check tests --output-format=concise
 
       - name: Audit Python dependencies
         run: pip-audit -r requirements.txt
