@@ -35,7 +35,7 @@ def ask(df: pd.DataFrame, question: str) -> dict:
 
     # Every path — rule-based or LLM — goes through the same validator
     # before touching the data. This line is the actual safety boundary.
-    validate_query_spec(spec, columns)
+    validate_query_spec(spec, columns, column_types)
 
     result = execute_query(df, spec)
     explanation = explain_result(question, spec, result)
