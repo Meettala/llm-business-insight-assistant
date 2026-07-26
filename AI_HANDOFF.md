@@ -1,26 +1,25 @@
 # AI Handoff — LLM Business Insight Assistant
 
-> Paste this file into ChatGPT, Claude, Gemini, Copilot, Perplexity, or another AI assistant to continue this repository without restarting the project. Verify the live repository, active pull request, and latest CI run before changing anything.
+> Paste this file into ChatGPT, Claude, Gemini, Copilot, Perplexity, or another AI assistant to continue this repository without restarting the project. Verify the live `main` branch, open pull requests, and latest CI before changing anything.
 
 ## Continuation instruction
 
-You are continuing `Meettala/llm-business-insight-assistant`.
+You are continuing `Meettala/llm-business-insight-assistant`, a public MIT-licensed portfolio and reference implementation owned by Meet Tala.
 
-Do not replace the architecture casually or weaken the constrained-execution safety model. Read the live code, this file, `README.md`, `SECURITY.md`, `docs/architecture.md`, and PR #1 before editing. Preserve verified behaviour, add tests for behavioural changes, and update this file after material code, architecture, security, deployment, documentation, licensing, or roadmap work.
+Do not replace the architecture casually or weaken the constrained-execution safety model. Read the live code, this file, `README.md`, `SECURITY.md`, `docs/architecture.md`, and `docs/PORTFOLIO_PRESENTATION_GUIDE.md` before editing. Add tests for behavioural changes and update this file after material code, architecture, security, deployment, documentation, licensing, roadmap, screenshot, demo, or social-preview work.
 
 Never place secrets, customer data, private keys, private prompts, production infrastructure details, or confidential commercial information in this public repository.
 
-## Project identity
+## Repository state
 
 - Repository: `Meettala/llm-business-insight-assistant`
-- Owner: Meet Tala
-- Purpose: public portfolio and reference implementation
+- Default branch: `main`
 - Licence: MIT
-- Base branch: `main`
-- Active branch: `agent/professional-repository-foundation`
-- Pull request: PR #1, `Professionalize repository foundation`
-- PR URL: `https://github.com/Meettala/llm-business-insight-assistant/pull/1`
-- Last updated: 26 July 2026
+- PR #1, `Professionalize repository foundation`, was squash-merged on 26 July 2026.
+- Merge commit: `bef5c22d1fc5702dbe8facf25169ea86310779dc`
+- The merged repository is ready for portfolio and job-application use.
+- Presentation follow-up branch: `docs/presentation-guide`
+- Presentation instructions: `docs/PORTFOLIO_PRESENTATION_GUIDE.md`
 
 ## Product purpose
 
@@ -76,7 +75,7 @@ Important modules:
 
 ## Implemented
 
-### Safety and validation
+### Safety and reliability
 
 - Fixed operation whitelist.
 - Schema-aware numeric and date validation.
@@ -84,14 +83,9 @@ Important modules:
 - Rejection of empty output, arrays, unknown fields, invalid types, and missing operations.
 - Provider fallback with structured logging.
 - Injection-resistance coverage for hostile CSV values and query fields.
-- Mandatory validation before deterministic pandas execution.
-
-### Reliability
-
 - `QueryExecutionError` for unusable analytical results.
 - Protection for empty filtered data, null-only measures, invalid dates, empty grouped/trend results, and non-finite values.
 - Safe Streamlit handling for malformed CSVs, empty files, unsupported questions, and execution failures.
-- Provider fallback tests that avoid paid API calls and prevent exception details from reaching user-facing output.
 
 ### Engineering quality
 
@@ -107,22 +101,36 @@ Important modules:
 - Recruiter-focused README.
 - Architecture, roadmap, security, contribution, changelog, and commercialisation documentation.
 - MIT licence.
-- Living AI handoff.
 - Architecture and social-preview SVG assets in `docs/assets/`.
-- Updated PR description covering scope, safety, validation, deployment, and commercial boundaries.
+- Step-by-step portfolio presentation guide.
+- Living AI handoff.
 
-## Verified validation status
+## Verified validation
 
-Workflow run 37 on commit `a7e588a49d0695d7a263aa5cc128135046ca62aa` completed successfully:
+Final workflow run 38 on commit `2d40f0ad1a6aaa98905d8c691ee6417d8f1caa07` passed:
 
-- Python 3.10 tests: passed.
-- Python 3.11 tests: passed.
-- Python 3.12 tests: passed.
-- Ruff application code: passed.
-- Ruff tests: passed.
-- `pip-audit -r requirements.txt`: passed.
+- Python 3.10 tests.
+- Python 3.11 tests.
+- Python 3.12 tests.
+- Ruff application code.
+- Ruff tests.
+- `pip-audit -r requirements.txt`.
 
-A final workflow will run after this handoff update. Do not claim that newer commit is green until GitHub confirms it.
+Any later change must be validated again before being described as green.
+
+## Presentation tasks
+
+The remaining tasks are presentation-only and are documented in detail in `docs/PORTFOLIO_PRESENTATION_GUIDE.md`:
+
+1. Run the Streamlit app locally or through Docker.
+2. Capture a real application screenshot.
+3. Record a 30–60 second demo video or GIF.
+4. Add genuine demo media to the README.
+5. Convert `docs/assets/social-preview.svg` to a suitable PNG.
+6. Upload the PNG through GitHub repository **Settings → General → Social preview**.
+7. Verify the public repository before sharing it with recruiters.
+
+The guide also includes suggested GitHub topics, a repository description, CV wording, interview wording, and instructions for another AI assistant.
 
 ## Decisions that must be preserved
 
@@ -148,17 +156,9 @@ A final workflow will run after this handoff update. Do not claim that newer com
 - Provider timeout, retry, latency, and cost instrumentation remain future work.
 - Dependencies use compatible minimum versions rather than a generated lock file.
 - Docker is for local demonstration, not a complete production deployment.
-- A real Streamlit screenshot or demo GIF must still be captured from a running app; repository SVG assets are available now.
+- A real screenshot or demo GIF still requires running the application.
+- GitHub social-preview configuration must be completed through repository settings.
 - Accessibility testing and structured parser evaluation datasets remain future work.
-
-## Next work after PR #1
-
-1. Confirm the final CI run generated by this handoff update.
-2. Mark PR #1 ready for review if it remains green and mergeable.
-3. Merge intentionally into `main` after review.
-4. Run the merged app locally or deploy it and capture a real screenshot/demo GIF.
-5. Set `docs/assets/social-preview.svg` or a rendered PNG as the GitHub social preview manually in repository settings.
-6. Add provider timeout/cost instrumentation, parser evaluation datasets, accessibility testing, and richer validated filters in later PRs.
 
 ## Public versus commercial product policy
 
@@ -168,11 +168,11 @@ See `docs/commercialisation-and-private-production.md`.
 
 ## Rules for another AI
 
-Before editing, inspect the live branch, PR, CI status, implementation, README, security policy, and architecture docs. Do not ask the user to repeat information recorded here.
+Before editing, inspect the live branch, open PRs, CI status, implementation, README, security policy, architecture documentation, and presentation guide. Do not ask the user to repeat information recorded here.
 
-When editing, keep changes reviewable, add tests, preserve the validated-query boundary, avoid unsupported claims, and never print or commit secrets.
+When editing, keep changes reviewable, add tests where behaviour changes, preserve the validated-query boundary, avoid unsupported claims, and never print or commit secrets.
 
-Before finishing, verify tests, linting, dependency scanning, update this file with facts, and update the PR description when scope or validation changes.
+Before finishing, verify tests, linting, and dependency scanning; update this file with facts; and update PR documentation when scope or validation changes.
 
 ## Other repositories planned for later standardisation
 
