@@ -11,16 +11,18 @@ import pandas as pd
 import streamlit as st
 
 from src.insight.data import infer_column_types, load_csv
+from src.insight.executor import QueryExecutionError
 from src.insight.parser_llm import llm_available
 from src.insight.pipeline import ask
+from src.insight.query_spec import InvalidQuerySpec
 
 ROOT = Path(__file__).resolve().parents[1]
 
 st.set_page_config(page_title="LLM Business Insight Assistant", layout="wide")
 st.title("LLM Business Insight Assistant")
 st.caption(
-    "Ask questions about your CSV in plain English. Every answer states the "
-    "exact numbers it is based on."
+    "Ask questions about your CSV in plain English. Every answer is calculated "
+    "from the uploaded data through a validated query specification."
 )
 
 if llm_available():
@@ -35,7 +37,19 @@ st.info(
 
 uploaded = st.file_uploader("Upload a CSV", type="csv")
 default_path = ROOT / "data" / "sample_sales.csv"
-df = load_csv(uploaded) if uploaded else load_csv(default_path)
+
+try:
+    df = load_csv(uploaded) if uploaded else load_csv(default_path)
+except (pd.errors.ParserError, UnicodeDecodeError, OSError, ValueError):
+    st.error(
+        "The CSV could not be read. Check that it is a valid UTF-8 CSV with a "
+        "header row and consistent columns."
+    )
+    st.stop()
+
+if df.empty:
+    st.error("The CSV is empty. Upload a file containing at least one data row.")
+    st.stop()
 
 if uploaded is None:
     st.caption(
@@ -58,8 +72,29 @@ question = st.text_input(
     value="What is the total revenue by region?",
 )
 
-if st.button("Ask") and question:
-    result = ask(df, question)
+if st.button("Ask"):
+    if not question.strip():
+        st.warning("Enter a question before running the analysis.")
+        st.stop()
+
+    try:
+        result = ask(df, question.strip())
+    except InvalidQuerySpec as exc:
+        st.warning(
+            "That question cannot be represented safely with the supported "
+            f"operations. Details: {exc}"
+        )
+        st.stop()
+    except QueryExecutionError as exc:
+        st.warning(str(exc))
+        st.stop()
+    except (KeyError, TypeError, ValueError):
+        st.error(
+            "The analysis could not be completed for this dataset. Try a more "
+            "specific question using one of the detected columns."
+        )
+        st.stop()
+
     st.markdown(f"**Answer** ({result['mode']} parsing):")
     st.text(result["explanation"])
 
