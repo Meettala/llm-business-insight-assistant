@@ -6,9 +6,9 @@
 
 You are continuing `Meettala/llm-business-insight-assistant`.
 
-Do not replace the architecture casually or weaken the constrained-execution safety model. Read the live code, this file, `README.md`, `SECURITY.md`, `docs/architecture.md`, and Draft PR #1 before editing. Preserve verified behaviour, work through a feature branch and pull request, add tests for behavioural changes, and update this file after material code, architecture, security, deployment, documentation, licensing, or roadmap work.
+Do not replace the architecture casually or weaken the constrained-execution safety model. Read the live code, this file, `README.md`, `SECURITY.md`, `docs/architecture.md`, and PR #1 before editing. Preserve verified behaviour, add tests for behavioural changes, and update this file after material code, architecture, security, deployment, documentation, licensing, or roadmap work.
 
-Never place secrets, customer data, private keys, private prompts, production infrastructure details, or confidential commercial information in this public file or repository.
+Never place secrets, customer data, private keys, private prompts, production infrastructure details, or confidential commercial information in this public repository.
 
 ## Project identity
 
@@ -18,13 +18,13 @@ Never place secrets, customer data, private keys, private prompts, production in
 - Licence: MIT
 - Base branch: `main`
 - Active branch: `agent/professional-repository-foundation`
-- Active PR: Draft PR #1, `Professionalize repository foundation`
+- Pull request: PR #1, `Professionalize repository foundation`
 - PR URL: `https://github.com/Meettala/llm-business-insight-assistant/pull/1`
 - Last updated: 26 July 2026
 
 ## Product purpose
 
-A user uploads a CSV file and asks a plain-English business question. The application infers the dataset schema, converts the question into a constrained `QuerySpec`, validates that specification, executes a fixed pandas operation, and returns chart-ready data plus an explanation grounded in the computed result.
+A user uploads a CSV file and asks a plain-English business question. The application infers the schema, converts the question into a constrained `QuerySpec`, validates it, executes a fixed pandas operation, and returns chart-ready data plus an explanation grounded in computed values.
 
 The project demonstrates applied AI and analytics without granting a model authority to generate or execute arbitrary code.
 
@@ -32,18 +32,11 @@ The project demonstrates applied AI and analytics without granting a model autho
 
 Every parser path must produce a `QuerySpec` and call `validate_query_spec` before `execute_query`.
 
-Supported operations are restricted to:
-
-- `sum`
-- `mean`
-- `count`
-- `min`
-- `max`
-- `trend`
+Supported operations are restricted to `sum`, `mean`, `count`, `min`, `max`, and `trend`.
 
 The project must not introduce `eval`, `exec`, generated Python, unrestricted SQL, generated pandas expressions, or direct execution of provider output.
 
-Optional LLM output is untrusted JSON. It must pass strict response parsing and application-side schema validation. Unsupported or ambiguous requests should fail safely or fall back to the rule-based parser.
+Optional LLM output is untrusted JSON. It must pass strict response parsing and application-side schema validation. Provider failures fall back to the rule-based parser and still use the same validation boundary.
 
 ## Architecture
 
@@ -74,90 +67,70 @@ Important modules:
 
 - `src/insight/data.py` — CSV loading and type inference.
 - `src/insight/query_spec.py` — operation whitelist and schema validation.
-- `src/insight/parser_rule_based.py` — no-key parser and provider fallback.
-- `src/insight/parser_llm.py` — OpenAI/Anthropic calls and strict untrusted-output parsing.
+- `src/insight/parser_rule_based.py` — no-key parser and fallback.
+- `src/insight/parser_llm.py` — provider calls and strict untrusted-output parsing.
 - `src/insight/executor.py` — deterministic analytics and edge-case protection.
 - `src/insight/explain.py` — explanations built from computed values.
-- `src/insight/pipeline.py` — mandatory end-to-end orchestration path.
+- `src/insight/pipeline.py` — mandatory orchestration path.
 - `streamlit_app/app.py` — interactive interface and safe user-facing errors.
 
 ## Implemented
 
-### Original MVP
+### Safety and validation
 
-- CSV upload and sample dataset.
-- Numeric, categorical, and date-like inference.
-- Rule-based parser without API keys.
-- Optional OpenAI and Anthropic parsing.
 - Fixed operation whitelist.
-- Grouping, filtering, scalar, grouped, and monthly trend results.
-- Streamlit demo.
-- Safety and injection-resistance tests.
+- Schema-aware numeric and date validation.
+- Strict malformed-LLM-response handling.
+- Rejection of empty output, arrays, unknown fields, invalid types, and missing operations.
+- Provider fallback with structured logging.
+- Injection-resistance coverage for hostile CSV values and query fields.
+- Mandatory validation before deterministic pandas execution.
 
-### Repository and portfolio foundation
+### Reliability
 
-- Recruiter-focused README.
-- `docs/architecture.md` and `docs/roadmap.md`.
-- `SECURITY.md`, `CONTRIBUTING.md`, `CHANGELOG.md`.
-- Pull-request template.
-- MIT `LICENSE`.
-- Public-versus-private commercialisation policy.
-- Living `AI_HANDOFF.md`.
-- Portfolio architecture SVG and social-preview SVG in `docs/assets/`.
+- `QueryExecutionError` for unusable analytical results.
+- Protection for empty filtered data, null-only measures, invalid dates, empty grouped/trend results, and non-finite values.
+- Safe Streamlit handling for malformed CSVs, empty files, unsupported questions, and execution failures.
+- Provider fallback tests that avoid paid API calls and prevent exception details from reaching user-facing output.
 
-### Validation and safety improvements
+### Engineering quality
 
-- Schema-aware `QuerySpec` validation.
-- Numeric operations reject non-numeric value columns.
-- Trend operations require a date-classified column.
-- Strict `InvalidLLMResponse` boundary.
-- Rejection of empty output, malformed JSON, arrays, unknown fields, missing operations, and invalid field types.
-- Plain JSON and a single JSON markdown fence supported.
-- Provider failures use structured logging and rule-based fallback.
-- Provider fallback tests ensure user-facing results do not expose provider exception details.
-- LLM-produced specifications still pass the same application validator.
-
-### Executor and UI hardening
-
-- `QueryExecutionError` for valid intent that cannot produce a usable result.
-- Non-count operations reject empty filtered datasets.
-- Counts may safely return zero.
-- Null-only numeric measures are rejected.
-- Invalid-date trends are rejected.
-- Non-finite analytical results are rejected.
-- Grouped and trend outputs drop unusable values and verify finite numbers.
-- Streamlit handles malformed CSVs, empty files, unsupported requests, execution failures, and invalid questions with safe messages.
-
-### Engineering controls
-
-- GitHub Actions test matrix for Python 3.10, 3.11, and 3.12.
+- GitHub Actions tests on Python 3.10, 3.11, and 3.12.
 - Ruff linting for source, application, and tests.
 - `pip-audit` dependency scanning.
-- `requirements-dev.txt`.
-- `pyproject.toml` package metadata and central Ruff configuration.
-- Non-root Docker demo image.
-- `.dockerignore` excludes environment files, caches, tests, and private local configuration.
+- `requirements-dev.txt` and `pyproject.toml`.
+- Non-root Docker image with health check.
+- `.dockerignore` excluding environment files, caches, tests, and private local configuration.
 
-## Current validation status
+### Portfolio and documentation
 
-Verified on recent workflow runs before the newest portfolio-readiness commits:
+- Recruiter-focused README.
+- Architecture, roadmap, security, contribution, changelog, and commercialisation documentation.
+- MIT licence.
+- Living AI handoff.
+- Architecture and social-preview SVG assets in `docs/assets/`.
+- Updated PR description covering scope, safety, validation, deployment, and commercial boundaries.
 
-- Python 3.10 tests passed.
-- Python 3.11 tests passed.
-- Python 3.12 tests passed.
-- Application Ruff now passes.
-- Test Ruff was the latest remaining quality failure before central configuration and concise diagnostics were added.
-- `pip-audit` had not yet run because GitHub stops the quality job at the first failed step.
+## Verified validation status
 
-The branch now contains additional provider fallback tests, executor edge-case tests, Streamlit handling, packaging, Docker, README, changelog, and visual assets. A fresh full CI result is required. Do not claim the latest branch is green until GitHub confirms tests, application Ruff, test Ruff, and `pip-audit` on the current head.
+Workflow run 37 on commit `a7e588a49d0695d7a263aa5cc128135046ca62aa` completed successfully:
+
+- Python 3.10 tests: passed.
+- Python 3.11 tests: passed.
+- Python 3.12 tests: passed.
+- Ruff application code: passed.
+- Ruff tests: passed.
+- `pip-audit -r requirements.txt`: passed.
+
+A final workflow will run after this handoff update. Do not claim that newer commit is green until GitHub confirms it.
 
 ## Decisions that must be preserved
 
 1. Safety takes priority over unrestricted analytical flexibility.
 2. Every execution path validates before deterministic execution.
-3. Optional provider output is untrusted input.
+3. Provider output is untrusted input.
 4. The no-key rule-based parser remains a first-class mode.
-5. Provider failures fall back safely and are logged without exposing details in the UI.
+5. Provider failures fall back safely without exposing details in the UI.
 6. Unknown provider fields are rejected rather than ignored.
 7. Documentation claims require evidence from code, tests, CI, or measured results.
 8. Public portfolio code uses MIT licensing.
@@ -166,63 +139,42 @@ The branch now contains additional provider fallback tests, executor edge-case t
 11. No system should be described as completely or 100% secure.
 12. Changes should use branches, pull requests, tests, and review rather than direct unreviewed edits to `main`.
 
-## Public versus commercial product policy
-
-This repository demonstrates the concept, safety model, engineering decisions, tests, and local demo. A future paid product should live in a separate private repository with proprietary licensing and appropriate controls for identity, least privilege, tenant isolation, encryption, secret management, audit logging, monitoring, backups, retention, abuse prevention, incident response, compliance review, and penetration testing.
-
-See `docs/commercialisation-and-private-production.md`.
-
 ## Known limitations
 
-- The supported analytical grammar is intentionally narrow.
+- The analytical grammar is intentionally narrow.
 - The rule-based parser may choose the first numeric column for an ambiguous question.
 - Type inference is heuristic.
 - Complex joins, arbitrary formulas, forecasting, and unrestricted SQL are out of scope.
-- Provider timeout/retry/cost instrumentation is not yet implemented.
-- Dependencies still use compatible minimum versions rather than a generated lock file.
-- Docker is intended for local demonstration, not as a complete production deployment.
-- A real application screenshot or demo GIF still needs to be captured from a running app; repository SVG visuals are already available.
+- Provider timeout, retry, latency, and cost instrumentation remain future work.
+- Dependencies use compatible minimum versions rather than a generated lock file.
+- Docker is for local demonstration, not a complete production deployment.
+- A real Streamlit screenshot or demo GIF must still be captured from a running app; repository SVG assets are available now.
 - Accessibility testing and structured parser evaluation datasets remain future work.
 
-## Immediate next work
+## Next work after PR #1
 
-1. Check CI on the newest branch head.
-2. Fix any test Ruff failure with an actual code correction or narrowly justified configuration.
-3. Review and fix any `pip-audit` finding.
-4. Correct any failing provider fallback or executor edge-case test.
-5. Run a final README, architecture, security, Docker, and packaging consistency review.
-6. Add the architecture SVG to the README if presentation remains clear.
-7. Update Draft PR #1 with complete scope and verified results.
-8. Mark the PR ready only after all checks pass.
-9. Merge intentionally into `main` only after review.
-10. Capture a real Streamlit screenshot/demo after the merged version is run locally or deployed.
+1. Confirm the final CI run generated by this handoff update.
+2. Mark PR #1 ready for review if it remains green and mergeable.
+3. Merge intentionally into `main` after review.
+4. Run the merged app locally or deploy it and capture a real screenshot/demo GIF.
+5. Set `docs/assets/social-preview.svg` or a rendered PNG as the GitHub social preview manually in repository settings.
+6. Add provider timeout/cost instrumentation, parser evaluation datasets, accessibility testing, and richer validated filters in later PRs.
+
+## Public versus commercial product policy
+
+This repository demonstrates the concept, safety model, engineering decisions, tests, and local demo. A future paid product should live in a separate private proprietary repository with identity, least privilege, tenant isolation, encryption, secret management, audit logging, monitoring, backup, retention, abuse prevention, incident response, compliance review, and penetration testing.
+
+See `docs/commercialisation-and-private-production.md`.
 
 ## Rules for another AI
 
-Before editing:
+Before editing, inspect the live branch, PR, CI status, implementation, README, security policy, and architecture docs. Do not ask the user to repeat information recorded here.
 
-- Inspect the live branch and PR.
-- Check CI status.
-- Read the implementation rather than trusting this summary alone.
-- Do not ask the user to repeat information already recorded here.
+When editing, keep changes reviewable, add tests, preserve the validated-query boundary, avoid unsupported claims, and never print or commit secrets.
 
-When editing:
-
-- Keep changes scoped and reviewable.
-- Add tests for behaviour changes.
-- Preserve the validated-query boundary.
-- Avoid unnecessary frameworks and unsupported claims.
-- Never print or commit secrets.
-
-Before finishing:
-
-- Verify tests, linting, and dependency scanning.
-- Update this file with facts, not assumptions.
-- Update the PR description if scope or validation status changed.
+Before finishing, verify tests, linting, dependency scanning, update this file with facts, and update the PR description when scope or validation changes.
 
 ## Other repositories planned for later standardisation
-
-Priority order:
 
 1. `Meettala/llm-business-insight-assistant`
 2. `Meettala/rag-research-assistant`
