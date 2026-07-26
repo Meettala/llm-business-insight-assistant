@@ -11,27 +11,52 @@ from __future__ import annotations
 
 from .query_spec import QuerySpec
 
+OPERATION_LABELS = {
+    "sum": "total",
+    "mean": "average",
+    "count": "count",
+    "min": "minimum",
+    "max": "maximum",
+}
+
 
 def explain_result(question: str, spec: QuerySpec, result: dict) -> str:
+    del question  # Reserved for future contextual phrasing.
+
     if result["type"] == "scalar":
-        op_word = {"sum": "total", "mean": "average", "count": "count", "min": "minimum", "max": "maximum"}[result["operation"]]
-        col = f" of {result.get('column')}" if result.get("column") else ""
-        return f"The {op_word}{col} is {_format_number(result['value'])}, computed from {result.get('row_count', 'the')} matching rows."
+        operation_label = OPERATION_LABELS[result["operation"]]
+        column_label = (
+            f" of {result.get('column')}" if result.get("column") else ""
+        )
+        row_count = result.get("row_count", "the")
+        formatted_value = _format_number(result["value"])
+        return (
+            f"The {operation_label}{column_label} is {formatted_value}, "
+            f"computed from {row_count} matching rows."
+        )
 
     if result["type"] == "grouped":
-        top_items = sorted(result["data"].items(), key=lambda kv: kv[1], reverse=True)[:5]
-        lines = [f"- {k}: {_format_number(v)}" for k, v in top_items]
-        return f"Breakdown by {spec.group_by_column} (top {len(lines)}):\n" + "\n".join(lines)
+        top_items = sorted(
+            result["data"].items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )[:5]
+        lines = [f"- {key}: {_format_number(value)}" for key, value in top_items]
+        heading = f"Breakdown by {spec.group_by_column} (top {len(lines)}):\n"
+        return heading + "\n".join(lines)
 
     if result["type"] == "timeseries":
         points = sorted(result["data"].items())
-        lines = [f"- {period}: {_format_number(v)}" for period, v in points]
-        return f"Trend of {spec.value_column} over time:\n" + "\n".join(lines)
+        lines = [
+            f"- {period}: {_format_number(value)}" for period, value in points
+        ]
+        heading = f"Trend of {spec.value_column} over time:\n"
+        return heading + "\n".join(lines)
 
     return "Could not generate an explanation for this result type."
 
 
-def _format_number(n: float) -> str:
-    if isinstance(n, int) or n == int(n):
-        return f"{int(n):,}"
-    return f"{n:,.2f}"
+def _format_number(number: float) -> str:
+    if isinstance(number, int) or number == int(number):
+        return f"{int(number):,}"
+    return f"{number:,.2f}"
