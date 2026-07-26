@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
+  <title id="title">LLM Business Insight Assistant architecture</title>
+  <desc id="desc">CSV data and a user question pass through schema inference, constrained parsing, strict validation, deterministic pandas execution, and grounded output generation.</desc>
+  <rect width="1200" height="680" fill="#0f172a"/>
+  <text x="600" y="58" text-anchor="middle" fill="#f8fafc" font-family="Arial, sans-serif" font-size="32" font-weight="700">Safety-first analytics architecture</text>
+  <text x="600" y="92" text-anchor="middle" fill="#94a3b8" font-family="Arial, sans-serif" font-size="18">Interpretation is untrusted. Validation controls deterministic execution.</text>
+
+  <g font-family="Arial, sans-serif">
+    <rect x="70" y="160" width="200" height="110" rx="18" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+    <text x="170" y="205" text-anchor="middle" fill="#f8fafc" font-size="22" font-weight="700">Inputs</text>
+    <text x="170" y="238" text-anchor="middle" fill="#cbd5e1" font-size="17">CSV + question</text>
+
+    <rect x="340" y="160" width="220" height="110" rx="18" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+    <text x="450" y="205" text-anchor="middle" fill="#f8fafc" font-size="22" font-weight="700">Inference</text>
+    <text x="450" y="238" text-anchor="middle" fill="#cbd5e1" font-size="17">Column types</text>
+
+    <rect x="630" y="160" width="220" height="110" rx="18" fill="#1e293b" stroke="#a78bfa" stroke-width="3"/>
+    <text x="740" y="198" text-anchor="middle" fill="#f8fafc" font-size="22" font-weight="700">Parsing</text>
+    <text x="740" y="228" text-anchor="middle" fill="#cbd5e1" font-size="16">Rules or optional LLM</text>
+    <text x="740" y="251" text-anchor="middle" fill="#cbd5e1" font-size="16">Untrusted output</text>
+
+    <rect x="920" y="145" width="220" height="140" rx="18" fill="#172554" stroke="#facc15" stroke-width="4"/>
+    <text x="1030" y="190" text-anchor="middle" fill="#fef9c3" font-size="22" font-weight="700">Validation</text>
+    <text x="1030" y="221" text-anchor="middle" fill="#fde68a" font-size="16">Operation whitelist</text>
+    <text x="1030" y="245" text-anchor="middle" fill="#fde68a" font-size="16">Columns + schema</text>
+    <text x="1030" y="269" text-anchor="middle" fill="#fde68a" font-size="16">Mandatory boundary</text>
+
+    <rect x="780" y="390" width="260" height="120" rx="18" fill="#052e16" stroke="#4ade80" stroke-width="3"/>
+    <text x="910" y="435" text-anchor="middle" fill="#f0fdf4" font-size="22" font-weight="700">Execution</text>
+    <text x="910" y="468" text-anchor="middle" fill="#bbf7d0" font-size="17">Fixed pandas operations</text>
+
+    <rect x="410" y="390" width="260" height="120" rx="18" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+    <text x="540" y="435" text-anchor="middle" fill="#f8fafc" font-size="22" font-weight="700">Results</text>
+    <text x="540" y="468" text-anchor="middle" fill="#cbd5e1" font-size="17">Chart-ready data</text>
+
+    <rect x="80" y="390" width="250" height="120" rx="18" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+    <text x="205" y="435" text-anchor="middle" fill="#f8fafc" font-size="22" font-weight="700">Explanation</text>
+    <text x="205" y="468" text-anchor="middle" fill="#cbd5e1" font-size="17">Computed values only</text>
+
+    <g stroke="#64748b" stroke-width="4" fill="none" marker-end="url(#arrow)">
+      <path d="M270 215 H340"/>
+      <path d="M560 215 H630"/>
+      <path d="M850 215 H920"/>
+      <path d="M1030 285 V350 Q1030 390 990 390"/>
+      <path d="M780 450 H670"/>
+      <path d="M410 450 H330"/>
+    </g>
+
+    <rect x="250" y="570" width="700" height="64" rx="16" fill="#111827" stroke="#475569" stroke-width="2"/>
+    <text x="600" y="597" text-anchor="middle" fill="#f8fafc" font-size="18" font-weight="700">No eval • No exec • No generated SQL • No generated pandas expressions</text>
+    <text x="600" y="620" text-anchor="middle" fill="#94a3b8" font-size="15">Malformed or unsupported requests fail safely before execution.</text>
+  </g>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#64748b"/>
+    </marker>
+  </defs>
+</svg>
