@@ -5,18 +5,21 @@ Run from the repository root with:
     streamlit run streamlit_app/app.py
 """
 
+import sys
 from pathlib import Path
 
-import pandas as pd
-import streamlit as st
-
-from src.insight.data import infer_column_types, load_csv
-from src.insight.executor import QueryExecutionError
-from src.insight.parser_llm import llm_available
-from src.insight.pipeline import ask
-from src.insight.query_spec import InvalidQuerySpec
-
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+import pandas as pd  # noqa: E402
+import streamlit as st  # noqa: E402
+
+from src.insight.data import infer_column_types, load_csv  # noqa: E402
+from src.insight.executor import QueryExecutionError  # noqa: E402
+from src.insight.parser_llm import llm_available  # noqa: E402
+from src.insight.pipeline import ask  # noqa: E402
+from src.insight.query_spec import InvalidQuerySpec  # noqa: E402
 
 st.set_page_config(page_title="LLM Business Insight Assistant", layout="wide")
 st.title("LLM Business Insight Assistant")
