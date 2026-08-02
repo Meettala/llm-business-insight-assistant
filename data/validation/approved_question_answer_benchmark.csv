@@ -1,4 +1,17 @@
 dataset,question,expected_answer,notes
+narrow_sample.csv,What's the total revenue?,$37883.89,15 rows and 3 columns
+narrow_sample.csv,What's the average revenue?,$2525.59,15 rows and 3 columns
+narrow_sample.csv,How many rows/records are there?,15,15 rows and 3 columns
+narrow_sample.csv,What's the total revenue for North?,$18795.48,Requires categorical value filter
+narrow_sample.csv,What's the total revenue for South?,$7022.89,Requires categorical value filter
+narrow_sample.csv,What's the total revenue for West?,$7300.13,Requires categorical value filter
+narrow_sample.csv,What's the total revenue for East?,$4765.39,Requires categorical value filter
+narrow_sample.csv,How many entries are from North?,5,Requires categorical value filter plus count
+narrow_sample.csv,What's the average revenue for South?,$1404.58,Requires categorical value filter plus mean
+narrow_sample.csv,What's the highest revenue value?,$4765.39 (East; 2026-01-01),Requires row context
+narrow_sample.csv,What's the lowest revenue value?,$668.73 (South; 2026-01-11),Requires row context
+narrow_sample.csv,What regions are in the data?,East | North | South | West,Requires distinct values
+narrow_sample.csv,What's the date range?,2026-01-01 to 2026-01-29,Requires date range
 wide_sample.csv,Total revenue?,$472522.22,User-approved reference answer
 wide_sample.csv,Total net revenue (after discount)?,$437122.05,Requires calculated field or validated formula
 wide_sample.csv,Average unit price?,$115.85,User-approved reference answer

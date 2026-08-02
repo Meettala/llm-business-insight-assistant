@@ -1,11 +1,8 @@
-"""Coordinate parsing, validation, execution, and explanation.
-
-This module is the required application entry point so every analytical request
-passes through the same validation boundary before deterministic execution.
-"""
+"""Coordinate parsing, validation, execution, and explanation."""
 
 from __future__ import annotations
 
+import inspect
 import logging
 
 import pandas as pd
@@ -15,34 +12,65 @@ from .executor import execute_query
 from .explain import explain_result
 from .parser_llm import InvalidLLMResponse, llm_available, parse_question_llm
 from .parser_rule_based import parse_question
-from .query_spec import QuerySpec, validate_query_spec
+from .query_spec import (
+    InvalidQuerySpec,
+    QuerySpec,
+    query_spec_to_dict,
+    validate_query_spec,
+)
 
 LOGGER = logging.getLogger(__name__)
 
 
+def _parse_rule_based(
+    df: pd.DataFrame,
+    question: str,
+    columns: list[str],
+    column_types: dict[str, str],
+) -> QuerySpec:
+    """Call the live parser while preserving compatibility with test doubles."""
+    parameters = inspect.signature(parse_question).parameters
+    if "data" in parameters:
+        return parse_question(
+            question,
+            columns,
+            column_types,
+            data=df,
+        )
+    return parse_question(question, columns, column_types)
+
+
 def ask(df: pd.DataFrame, question: str) -> dict:
-    """Answer a dataset question through the validated execution pipeline."""
+    """Answer one question through the validated deterministic pipeline."""
     columns = list(df.columns)
     column_types = infer_column_types(df)
 
-    spec: QuerySpec
     mode = "rule_based"
+    rule_error: Exception | None = None
 
-    if llm_available():
+    try:
+        spec = _parse_rule_based(
+            df,
+            question,
+            columns,
+            column_types,
+        )
+        validate_query_spec(spec, columns, column_types)
+    except (InvalidQuerySpec, ValueError) as exc:
+        rule_error = exc
+        if not llm_available():
+            raise
+
         try:
             spec = parse_question_llm(question, columns)
-            mode = "llm"
-        except (InvalidLLMResponse, RuntimeError, ValueError):
+            validate_query_spec(spec, columns, column_types)
+            mode = "llm_fallback"
+        except (InvalidLLMResponse, InvalidQuerySpec, RuntimeError, ValueError):
             LOGGER.warning(
-                "LLM parsing failed; using the rule-based parser instead",
+                "Both deterministic and LLM parsing failed",
                 exc_info=True,
             )
-            spec = parse_question(question, columns, column_types)
-    else:
-        spec = parse_question(question, columns, column_types)
-
-    # This validation call is the mandatory safety boundary for every parser.
-    validate_query_spec(spec, columns, column_types)
+            raise rule_error
 
     result = execute_query(df, spec)
     explanation = explain_result(question, spec, result)
@@ -50,14 +78,7 @@ def ask(df: pd.DataFrame, question: str) -> dict:
     return {
         "question": question,
         "mode": mode,
-        "spec": {
-            "operation": spec.operation,
-            "value_column": spec.value_column,
-            "group_by_column": spec.group_by_column,
-            "date_column": spec.date_column,
-            "filter_column": spec.filter_column,
-            "filter_value": spec.filter_value,
-        },
+        "spec": query_spec_to_dict(spec),
         "result": result,
         "explanation": explanation,
     }

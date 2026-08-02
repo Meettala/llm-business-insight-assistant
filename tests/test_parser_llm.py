@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 
@@ -54,8 +55,52 @@ def test_rejects_unknown_fields():
     ],
 )
 def test_rejects_invalid_field_types(field_name, value):
-    import json
-
     raw = json.dumps({"operation": "sum", field_name: value})
     with pytest.raises(InvalidLLMResponse, match=field_name):
+        parse_llm_response(raw)
+
+
+def test_parses_typed_filters_and_ranking():
+    spec = parse_llm_response(
+        json.dumps(
+            {
+                "operation": "sum",
+                "value_column": "revenue",
+                "group_by_column": "sales_rep",
+                "filters": [
+                    {
+                        "column": "region",
+                        "operator": "eq",
+                        "value": "North",
+                    }
+                ],
+                "ranking": "highest",
+                "limit": 1,
+                "format_hint": "currency",
+            }
+        )
+    )
+
+    assert spec.filters[0].column == "region"
+    assert spec.filters[0].value == "North"
+    assert spec.ranking == "highest"
+    assert spec.limit == 1
+
+
+def test_rejects_nested_filter_value():
+    raw = json.dumps(
+        {
+            "operation": "sum",
+            "value_column": "revenue",
+            "filters": [
+                {
+                    "column": "region",
+                    "operator": "eq",
+                    "value": {"$ne": None},
+                }
+            ],
+        }
+    )
+
+    with pytest.raises(InvalidLLMResponse, match="scalar"):
         parse_llm_response(raw)
