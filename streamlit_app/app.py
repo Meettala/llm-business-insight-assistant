@@ -10,9 +10,15 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+import altair as alt  # noqa: E402
 import pandas as pd  # noqa: E402
 import streamlit as st  # noqa: E402
 
+from src.insight.charting import (  # noqa: E402
+    COLOR_PALETTES,
+    chart_types_for,
+    palette_colors,
+)
 from src.insight.data import (  # noqa: E402
     infer_column_types,
     load_csv,
@@ -194,6 +200,43 @@ def run_question(question: str) -> dict:
         return {"question": question, "status": "application_error", "error": message}
 
 
+def build_chart(chart_df: pd.DataFrame, chart_type: str, palette_name: str, x_name: str):
+    colors = list(palette_colors(palette_name))
+    base = alt.Chart(chart_df).encode(
+        x=alt.X(f"{x_name}:N", sort=None, title=x_name.replace("_", " ").title()),
+        y=alt.Y("value:Q", title="Value"),
+        tooltip=[alt.Tooltip(f"{x_name}:N"), alt.Tooltip("value:Q", format=",.2f")],
+        color=alt.Color(
+            f"{x_name}:N",
+            scale=alt.Scale(range=colors),
+            legend=None,
+        ),
+    )
+    if chart_type == "Bar":
+        return base.mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
+    if chart_type == "Horizontal bar":
+        return alt.Chart(chart_df).mark_bar(cornerRadiusEnd=4).encode(
+            y=alt.Y(f"{x_name}:N", sort="-x", title=x_name.replace("_", " ").title()),
+            x=alt.X("value:Q", title="Value"),
+            color=alt.Color(f"{x_name}:N", scale=alt.Scale(range=colors), legend=None),
+            tooltip=[alt.Tooltip(f"{x_name}:N"), alt.Tooltip("value:Q", format=",.2f")],
+        )
+    if chart_type == "Line":
+        return base.mark_line(point=True, strokeWidth=3).encode(color=alt.value(colors[0]))
+    if chart_type == "Area":
+        return base.mark_area(opacity=0.65, line=True).encode(color=alt.value(colors[0]))
+    if chart_type == "Scatter":
+        return base.mark_circle(size=110)
+    if chart_type in {"Pie", "Donut"}:
+        inner_radius = 65 if chart_type == "Donut" else 0
+        return alt.Chart(chart_df).mark_arc(innerRadius=inner_radius).encode(
+            theta=alt.Theta("value:Q"),
+            color=alt.Color(f"{x_name}:N", scale=alt.Scale(range=colors), title=x_name),
+            tooltip=[alt.Tooltip(f"{x_name}:N"), alt.Tooltip("value:Q", format=",.2f")],
+        )
+    raise ValueError(f"Unsupported chart type: {chart_type}")
+
+
 def render_answer(item: dict, index: int | None = None) -> None:
     heading = f"Question {index}: {item['question']}" if index else item["question"]
     st.markdown(f"#### {heading}")
@@ -202,31 +245,54 @@ def render_answer(item: dict, index: int | None = None) -> None:
         return
 
     result = item["result"]
-    st.warning(
-        "This is the application's calculated answer and is not automatically "
-        "verified against a trusted expected answer."
-    )
     st.write(result["explanation"])
     result_data = result["result"]
-    if result_data["type"] == "grouped":
-        chart_df = pd.DataFrame(
-            list(result_data["data"].items()), columns=["group", "value"]
-        ).set_index("group")
-        st.bar_chart(chart_df)
-    elif result_data["type"] == "timeseries":
-        chart_df = pd.DataFrame(
-            list(result_data["data"].items()), columns=["period", "value"]
-        ).set_index("period")
-        st.line_chart(chart_df)
+    result_type = result_data["type"]
+    chart_choices = chart_types_for(result_type)
+    if chart_choices:
+        values = list(result_data["data"].items())
+        x_name = "period" if result_type == "timeseries" else "group"
+        chart_df = pd.DataFrame(values, columns=[x_name, "value"])
+        control_a, control_b = st.columns(2)
+        chart_type = control_a.selectbox(
+            "Chart type",
+            options=chart_choices,
+            key=f"chart_type_{index}_{item['question']}",
+        )
+        palette_name = control_b.selectbox(
+            "Colour palette",
+            options=list(COLOR_PALETTES),
+            key=f"palette_{index}_{item['question']}",
+        )
+        st.altair_chart(
+            build_chart(chart_df, chart_type, palette_name, x_name),
+            use_container_width=True,
+        )
+    else:
+        st.caption("This answer is a single value, so a comparison chart is not applicable.")
+
     with st.expander("Show the validated query spec"):
         st.json(result["spec"])
 
 
 st.subheader("Ask questions")
+st.caption(
+    "Application answers are calculated safely but remain unverified until they "
+    "are compared with a trusted expected answer."
+)
 question_mode = st.radio(
     "Choose how to ask",
     options=["One question", "Multiple questions together"],
     horizontal=True,
+)
+reset_before_run = st.checkbox(
+    "Start a fresh audit for each run",
+    value=True,
+    help=(
+        "When enabled, the previous audit history is cleared automatically before "
+        "processing the next single question or batch. Disable it to build one "
+        "combined history across several runs."
+    ),
 )
 
 submitted_questions: list[str] = []
@@ -259,6 +325,8 @@ else:
             st.warning("Enter at least one question, with one question on each line.")
 
 if submitted_questions:
+    if reset_before_run:
+        st.session_state.query_history = []
     with st.spinner(f"Processing {len(submitted_questions)} question(s)..."):
         outputs = [run_question(question) for question in submitted_questions]
     st.markdown("### Results")
@@ -268,8 +336,8 @@ if submitted_questions:
 
 st.subheader("Question and answer audit")
 st.caption(
-    "Every attempted question in this browser session is recorded. Single and "
-    "batch questions are included in the same downloadable audit file."
+    "Every attempted question is recorded. Use the fresh-audit option above to "
+    "replace old results automatically, or disable it to accumulate several runs."
 )
 history = st.session_state.query_history
 if history:
@@ -299,7 +367,7 @@ if history:
         file_name="llm_business_insight_question_answer_audit.csv",
         mime="text/csv",
     )
-    if clear_col.button("Clear history"):
+    if clear_col.button("Clear history now"):
         st.session_state.query_history = []
         st.rerun()
 else:
