@@ -1,0 +1,37 @@
+dataset,question,expected_answer,notes
+wide_sample.csv,Total revenue?,$472522.22,User-approved reference answer
+wide_sample.csv,Total net revenue (after discount)?,$437122.05,Requires calculated field or validated formula
+wide_sample.csv,Average unit price?,$115.85,User-approved reference answer
+wide_sample.csv,Total units sold?,4050,User-approved reference answer
+wide_sample.csv,Revenue by category — Electronics?,$178548.94,Filtered or grouped result
+wide_sample.csv,Revenue by category — Hardware?,$167541.91,Filtered or grouped result
+wide_sample.csv,Revenue by category — Mechanical?,$126431.37,Filtered or grouped result
+wide_sample.csv,Revenue by channel — Online?,$140445.16,Filtered or grouped result
+wide_sample.csv,Revenue by channel — Wholesale (lowest)?,$98810.05,Requires ranking plus grouped result
+wide_sample.csv,Revenue by region — East (highest)?,$135686.41,Requires ranking plus grouped result
+wide_sample.csv,Average satisfaction score?,3.46,User-approved reference answer
+wide_sample.csv,How many orders were returned?,36 out of 200 (18.0%),Requires conditional count and percentage
+wide_sample.csv,Which sales rep had the highest revenue?,T. Brown — $93871.38,Requires grouping and ranking
+wide_sample.csv,Which sales rep had the lowest revenue?,J. Adams — $56408.90,Requires grouping and ranking
+wide_sample.csv,Total gross profit?,$213800.03,May require calculated field depending on schema
+wide_sample.csv,Overall profit margin %?,45.25%,Requires validated ratio calculation
+wide_sample.csv,Average lead time (days)?,7.49,User-approved reference answer
+wide_sample.csv,Revenue by segment — Enterprise (highest)?,$169594.65,Requires grouping and ranking
+wide_sample.csv,Which product sold the most units?,Widget A — 829 units,Requires grouping and ranking
+wide_sample.csv,Which product sold the fewest units?,Component Q — 469 units,Requires grouping and ranking
+long_sample.csv,Total revenue?,$31161122.04,12000 rows; 2023-2025
+long_sample.csv,Average revenue per row?,$2596.76,12000 rows; 2023-2025
+long_sample.csv,Total units sold?,264788,12000 rows; 2023-2025
+long_sample.csv,Average units sold?,22.07,12000 rows; 2023-2025
+long_sample.csv,Revenue by region — North (highest)?,$8293844.11,Requires grouping and ranking
+long_sample.csv,Revenue by region — South (lowest)?,$7028188.90,Requires grouping and ranking
+long_sample.csv,Revenue by product — Gadget X (highest)?,$11992875.89,Requires grouping and ranking
+long_sample.csv,Revenue by product — Gadget Y (lowest)?,$4905002.52,Requires grouping and ranking
+long_sample.csv,Revenue in 2023?,$10354925.12,Requires date-period filter
+long_sample.csv,Revenue in 2024 (highest year)?,$10516847.77,Requires date grouping and ranking
+long_sample.csv,Revenue in 2025?,$10289349.15,Requires date-period filter
+long_sample.csv,Row count in 2024?,4044,Requires date-period filter and count
+long_sample.csv,Which month had the highest revenue?,March 2025 — $1225890.53,Requires monthly grouping and ranking
+long_sample.csv,What's the max single-transaction revenue?,$10170.53,User-approved reference answer
+long_sample.csv,What's the min single-transaction revenue?,$357.11,User-approved reference answer
+long_sample.csv,Total revenue for North region + Gadget X product combined?,$3207067.60 (750 rows),Requires multiple simultaneous filters
