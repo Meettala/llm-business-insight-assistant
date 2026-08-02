@@ -5,8 +5,10 @@ Run from the repository root with:
     streamlit run streamlit_app/app.py
 """
 
+import json
 import math
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +25,7 @@ from src.insight.data import (  # noqa: E402
     profile_dataset,
 )
 from src.insight.executor import QueryExecutionError  # noqa: E402
+from src.insight.history import history_to_csv  # noqa: E402
 from src.insight.parser_llm import llm_available  # noqa: E402
 from src.insight.pipeline import ask  # noqa: E402
 from src.insight.query_spec import InvalidQuerySpec  # noqa: E402
@@ -33,6 +36,9 @@ st.caption(
     "Ask questions about your CSV in plain English. Every answer is calculated "
     "from the complete uploaded dataset through a validated query specification."
 )
+
+if "query_history" not in st.session_state:
+    st.session_state.query_history = []
 
 if llm_available():
     mode = "LLM-assisted parsing with validated execution"
@@ -46,6 +52,7 @@ st.info(
 
 uploaded = st.file_uploader("Upload a CSV", type="csv")
 default_path = ROOT / "data" / "sample_sales.csv"
+dataset_name = uploaded.name if uploaded else default_path.name
 
 try:
     df = load_csv(uploaded) if uploaded else load_csv(default_path)
@@ -150,33 +157,92 @@ question = st.text_input(
     value="What is the total revenue by region?",
 )
 
+analysis_result = None
 if st.button("Ask"):
-    if not question.strip():
+    clean_question = question.strip()
+    if not clean_question:
         st.warning("Enter a question before running the analysis.")
-        st.stop()
+    else:
+        timestamp = datetime.now(timezone.utc).isoformat()
+        try:
+            analysis_result = ask(df, clean_question)
+            spec = analysis_result["spec"]
+            st.session_state.query_history.append(
+                {
+                    "timestamp_utc": timestamp,
+                    "dataset": dataset_name,
+                    "question": clean_question,
+                    "status": "answered_unverified",
+                    "answer": analysis_result["explanation"],
+                    "parsing_mode": analysis_result["mode"],
+                    "operation": spec.get("operation"),
+                    "value_column": spec.get("value_column"),
+                    "group_by_column": spec.get("group_by_column"),
+                    "date_column": spec.get("date_column"),
+                    "filter_column": spec.get("filter_column"),
+                    "filter_value": spec.get("filter_value"),
+                    "validated_query_spec_json": json.dumps(spec, sort_keys=True),
+                    "result_json": json.dumps(
+                        analysis_result["result"], sort_keys=True, default=str
+                    ),
+                    "error": "",
+                }
+            )
+        except InvalidQuerySpec as exc:
+            message = (
+                "That question cannot be represented safely with the supported "
+                f"operations. Details: {exc}"
+            )
+            st.warning(message)
+            st.session_state.query_history.append(
+                {
+                    "timestamp_utc": timestamp,
+                    "dataset": dataset_name,
+                    "question": clean_question,
+                    "status": "rejected",
+                    "answer": "",
+                    "error": message,
+                }
+            )
+        except QueryExecutionError as exc:
+            message = str(exc)
+            st.warning(message)
+            st.session_state.query_history.append(
+                {
+                    "timestamp_utc": timestamp,
+                    "dataset": dataset_name,
+                    "question": clean_question,
+                    "status": "execution_error",
+                    "answer": "",
+                    "error": message,
+                }
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            message = (
+                "The analysis could not be completed for this dataset. Try a more "
+                "specific question using one of the detected columns."
+            )
+            st.error(message)
+            st.session_state.query_history.append(
+                {
+                    "timestamp_utc": timestamp,
+                    "dataset": dataset_name,
+                    "question": clean_question,
+                    "status": "application_error",
+                    "answer": "",
+                    "error": f"{message} ({type(exc).__name__})",
+                }
+            )
 
-    try:
-        result = ask(df, question.strip())
-    except InvalidQuerySpec as exc:
-        st.warning(
-            "That question cannot be represented safely with the supported "
-            f"operations. Details: {exc}"
-        )
-        st.stop()
-    except QueryExecutionError as exc:
-        st.warning(str(exc))
-        st.stop()
-    except (KeyError, TypeError, ValueError):
-        st.error(
-            "The analysis could not be completed for this dataset. Try a more "
-            "specific question using one of the detected columns."
-        )
-        st.stop()
+if analysis_result is not None:
+    st.markdown(f"**Answer** ({analysis_result['mode']} parsing):")
+    st.warning(
+        "This is the application's calculated answer, but it has not been "
+        "automatically verified against a trusted expected answer."
+    )
+    st.text(analysis_result["explanation"])
 
-    st.markdown(f"**Answer** ({result['mode']} parsing):")
-    st.text(result["explanation"])
-
-    result_data = result["result"]
+    result_data = analysis_result["result"]
     if result_data["type"] == "grouped":
         chart_df = pd.DataFrame(
             list(result_data["data"].items()),
@@ -191,4 +257,59 @@ if st.button("Ask"):
         st.line_chart(chart_df)
 
     with st.expander("Show the validated query spec"):
-        st.json(result["spec"])
+        st.json(analysis_result["spec"])
+
+st.subheader("Question and answer audit")
+st.caption(
+    "Every attempted question in this browser session is listed here. Download "
+    "the CSV to compare application answers with trusted answers. Session history "
+    "is cleared when the app session ends or when you press Clear history."
+)
+
+history = st.session_state.query_history
+if history:
+    audit_table = pd.DataFrame(history)
+    visible_columns = [
+        column
+        for column in (
+            "timestamp_utc",
+            "dataset",
+            "question",
+            "status",
+            "answer",
+            "operation",
+            "value_column",
+            "group_by_column",
+            "filter_column",
+            "filter_value",
+            "error",
+        )
+        if column in audit_table.columns
+    ]
+    st.dataframe(audit_table[visible_columns], use_container_width=True, hide_index=True)
+
+    download_col, clear_col = st.columns([2, 1])
+    download_col.download_button(
+        "Download all asked questions and app answers",
+        data=history_to_csv(history),
+        file_name="llm_business_insight_question_answer_audit.csv",
+        mime="text/csv",
+    )
+    if clear_col.button("Clear history"):
+        st.session_state.query_history = []
+        st.rerun()
+else:
+    st.info("No questions have been asked in this session yet.")
+
+benchmark_path = ROOT / "data" / "validation" / "approved_question_answer_benchmark.csv"
+if benchmark_path.exists():
+    st.download_button(
+        "Download approved expected-answer benchmark",
+        data=benchmark_path.read_bytes(),
+        file_name="approved_question_answer_benchmark.csv",
+        mime="text/csv",
+        help=(
+            "This file contains the trusted questions and expected answers supplied "
+            "for regression testing."
+        ),
+    )
