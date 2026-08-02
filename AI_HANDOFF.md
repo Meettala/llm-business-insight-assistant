@@ -1,251 +1,143 @@
 # AI Handoff — LLM Business Insight Assistant
 
-> Paste this file into ChatGPT, Claude, Gemini, Copilot, Perplexity, or another AI assistant to continue this repository without restarting the project. Verify the live `main` branch, open pull requests, and latest CI before changing anything.
+> Continue this repository from its live GitHub state. Verify `main`, open pull requests and GitHub Actions before making claims or edits.
 
-## Continuation instruction
-
-You are continuing `Meettala/llm-business-insight-assistant`, a public MIT-licensed portfolio and reference implementation owned by Meet Tala.
-
-Do not replace the architecture casually or weaken the constrained-execution safety model. Read the live code, this file, `README.md`, `SECURITY.md`, `docs/architecture.md`, and `docs/PORTFOLIO_PRESENTATION_GUIDE.md` before editing. Add tests for behavioural changes and update this file after material code, architecture, security, deployment, documentation, licensing, roadmap, screenshot, demo, or social-preview work.
-
-Never place secrets, customer data, private keys, private prompts, production infrastructure details, or confidential commercial information in this public repository.
-
-## Repository state
+## Repository
 
 - Repository: `Meettala/llm-business-insight-assistant`
 - Default branch: `main`
 - Licence: MIT
-- PR #1, `Professionalize repository foundation`, was squash-merged on 26 July 2026.
-- Merge commit: `bef5c22d1fc5702dbe8facf25169ea86310779dc`
-- Presentation follow-up branch: `docs/presentation-guide`
-- Presentation instructions: `docs/PORTFOLIO_PRESENTATION_GUIDE.md`
-- Current feature branch: `feat/dynamic-full-csv-explorer`
-- Current feature purpose: remove fixed-row preview behaviour and provide access to every successfully loaded CSV row and column.
-- Research and design record: `docs/full-dataset-explorer-research.md`
+- Current feature branch: `feat/accuracy-engine`
+- Current work: replace incorrect first-column/keyword guessing with a typed, schema-aware accuracy engine.
+- Design record: `docs/ACCURACY_ENGINE_IMPLEMENTATION.md`
+- Trusted benchmark: `data/validation/approved_question_answer_benchmark.csv`
+
+## Recently merged
+
+- PR #4 — dynamic full-dataset CSV explorer; merge `db22f7bbff417ee058173b7cc9593abec160c5d1`.
+- PR #5 — downloadable question/answer audit and benchmark; merge `e3cbc397d257dec44c0a765eab63034158301d57`.
+- PR #6 — single-question and multi-question modes; merge `10a22a663d2c2bfd405c2b8afd5dea5758544960`.
+- PR #7 — fresh-audit workflow and user-selected chart types/colour palettes; merge `20337c89f00618c061280c23d1d4191308c724ea`.
 
 ## Product purpose
 
-A user uploads a CSV file and asks a plain-English business question. The application infers the schema, converts the question into a constrained `QuerySpec`, validates it, executes a fixed pandas operation, and returns chart-ready data plus an explanation grounded in computed values.
+A user uploads a CSV and asks plain-English business questions. The application loads the complete dataframe, infers its schema, creates a constrained `QuerySpec`, validates it, performs fixed pandas operations and returns deterministic answers plus auditable query details.
 
-The project demonstrates applied AI and analytics without granting a model authority to generate or execute arbitrary code.
+## Mandatory safety property
 
-## Core safety property
+Every question must resolve to a validated `QuerySpec` before execution.
 
-Every parser path must produce a `QuerySpec` and call `validate_query_spec` before `execute_query`.
+Never introduce:
 
-Supported operations are restricted to `sum`, `mean`, `count`, `min`, `max`, and `trend`.
+- `eval` or `exec`;
+- generated Python or pandas expressions;
+- unrestricted SQL;
+- direct execution of provider output;
+- invented columns or unvalidated formulas.
 
-The project must not introduce `eval`, `exec`, generated Python, unrestricted SQL, generated pandas expressions, or direct execution of provider output.
+Provider output remains untrusted. The deterministic parser is primary; optional LLM parsing is only a validated fallback when deterministic intent cannot be represented.
 
-Optional LLM output is untrusted JSON. It must pass strict response parsing and application-side schema validation. Provider failures fall back to the rule-based parser and still use the same validation boundary.
+## Accuracy-engine branch
 
-## Architecture
+### Expanded QuerySpec
 
-```text
-CSV + question
-      |
-      v
-Complete CSV loading and column-type inference
-      |
-      +--> full-data profile and paginated browser view
-      |
-      v
-Rule-based parser or optional provider parser
-      |
-      v
-Strict provider-response parsing
-      |
-      v
-Validated QuerySpec  <--- mandatory trust boundary
-      |
-      v
-Deterministic pandas executor using the complete loaded dataframe
-      |
-      +--> chart-ready data
-      |
-      +--> grounded explanation
-```
+The branch adds:
 
-Important modules:
+- operations: `distinct`, `date_range` and `ratio` alongside existing fixed aggregations;
+- up to ten typed filters;
+- filter operators limited to `eq`, `truthy` and `year_eq`;
+- highest/lowest grouped ranking;
+- month/year date grouping;
+- named, application-controlled derived measures;
+- contextual columns for row-level minimum/maximum results;
+- conditional count percentages;
+- row-count metadata;
+- currency, percentage, integer and number formatting hints;
+- complete JSON audit serialisation.
 
-- `src/insight/data.py` — CSV loading, dataset profiling, pagination, and type inference.
-- `src/insight/query_spec.py` — operation whitelist and schema validation.
-- `src/insight/parser_rule_based.py` — no-key parser and fallback.
-- `src/insight/parser_llm.py` — provider calls and strict untrusted-output parsing.
-- `src/insight/executor.py` — deterministic analytics and edge-case protection.
-- `src/insight/explain.py` — explanations built from computed values.
-- `src/insight/pipeline.py` — mandatory orchestration path.
-- `streamlit_app/app.py` — interactive interface, complete-dataset explorer, and safe user-facing errors.
+### Parser behaviour
 
-## Implemented
+The parser now:
 
-### Safety and reliability
+- matches business concepts to the correct column instead of selecting the first numeric column;
+- uses actual low-cardinality categorical values from the uploaded dataframe to build filters;
+- supports multiple simultaneous filters;
+- distinguishes row-level extrema from grouped totals and rankings;
+- handles year filters and highest month/year questions;
+- handles distinct values and date ranges;
+- supports direct or validated derived net revenue and gross profit;
+- calculates overall profit margin as a ratio of totals;
+- rejects missing or ambiguous required fields instead of giving an unrelated confident answer.
 
-- Fixed operation whitelist.
-- Schema-aware numeric and date validation.
-- Strict malformed-LLM-response handling.
-- Rejection of empty output, arrays, unknown fields, invalid types, and missing operations.
-- Provider fallback with structured logging.
-- Injection-resistance coverage for hostile CSV values and query fields.
-- `QueryExecutionError` for unusable analytical results.
-- Protection for empty filtered data, null-only measures, invalid dates, empty grouped/trend results, and non-finite values.
-- Safe Streamlit handling for malformed CSVs, empty files, unsupported questions, and execution failures.
+### Executor behaviour
 
-### Full-dataset explorer work
+The executor performs only fixed operations for:
 
-The old UI used `df.head(10)`, which displayed only ten rows and could lead users to believe the application used only that preview. The analytical pipeline already received the complete dataframe, but the UI did not make this clear or let the user inspect all rows.
+- exact categorical filters;
+- truthy returned-order filters;
+- year filters;
+- grouped aggregation and ranking;
+- month/year grouping;
+- distinct values;
+- date ranges;
+- conditional counts and percentages;
+- net revenue, gross profit and profit-margin formulas selected from fixed enums;
+- row context for min/max answers.
 
-The feature branch now:
+### Tests
 
-- loads the complete CSV without application-level row or column truncation;
-- reports complete row and column counts;
-- reports missing cells, duplicate rows, and dataframe memory usage;
-- provides paginated access to every loaded row;
-- selects every uploaded column by default;
-- allows display-only column selection without changing analysis scope;
-- shows per-column inferred type, pandas dtype, non-null count, missing count, and unique-value count;
-- explicitly states that pagination affects only the browser view and not the dataframe used for answers;
-- adds reusable `DatasetProfile`, `DataPage`, `profile_dataset`, and `paginate_dataframe` code;
-- adds regression tests proving rows across all pages reconstruct the complete dataframe.
+New files:
 
-Truthful guarantee:
+- `tests/test_accuracy_engine.py` — 50 behaviour tests.
+- `tests/test_accuracy_engine_safety.py` — safety tests for new fields.
 
-> No application-level row or column truncation is applied after a CSV is successfully loaded. Every loaded row and column is available to the analytical pipeline, and every loaded row is reachable through the paginated data explorer.
+Before branch push, 72 focused local tests passed, including existing query-validation and executor edge expectations. GitHub Actions is authoritative before merge.
 
-Do not claim that files of unlimited size are supported. The current pandas/Streamlit design still requires the CSV to fit within available application memory and hosting upload limits.
+## Benchmark facts
 
-### Engineering quality
+The approved benchmark contains 49 questions:
 
-- GitHub Actions tests on Python 3.10, 3.11, and 3.12.
-- Ruff linting for source, application, and tests.
-- `pip-audit` dependency scanning.
-- `requirements-dev.txt` and `pyproject.toml`.
-- Non-root Docker image with health check.
-- `.dockerignore` excluding environment files, caches, tests, and private local configuration.
+- 13 narrow CSV questions;
+- 20 wide CSV questions;
+- 16 long CSV questions.
 
-### Portfolio and documentation
+The original raw narrow, wide and long CSV files are not stored in this public repository. Therefore, do not claim 49/49 exact live accuracy until the owner retests the deployed app using those original files and exports a fresh audit.
 
-- Recruiter-focused README.
-- Architecture, roadmap, security, contribution, changelog, and commercialisation documentation.
-- MIT licence.
-- Architecture and social-preview SVG assets in `docs/assets/`.
-- Step-by-step portfolio presentation guide.
-- Living AI handoff.
-- Current competitor and architecture research in `docs/full-dataset-explorer-research.md`.
+## Existing application features
 
-## Competitor research summary
+- complete CSV loading with no application-level row/column truncation after successful load;
+- paginated full-data explorer;
+- schema and missing/duplicate/memory summaries;
+- one-question and batch-question modes;
+- downloadable question/answer audit;
+- downloadable approved benchmark;
+- fresh audit per run by default, with optional accumulated history;
+- user-selected bar, horizontal bar, line, area, scatter, pie and donut charts where applicable;
+- Office/Excel-style and other palettes.
 
-Official product documentation was reviewed for ChatGPT Data Analysis, Julius AI, Hex, and PandasAI.
+Do not claim unlimited file size. Pandas still requires the complete CSV to fit available memory and hosting limits.
 
-Common patterns to preserve or consider:
+## Known limits
 
-- natural-language data questions;
-- interactive or paginated tables rather than rendering every cell simultaneously;
-- complete-data computation separated from the visible page;
-- dynamic schemas;
-- cleaning, sorting, filtering, charts, statistics, and export;
-- multiple files or dataframes;
-- database and warehouse connectors for larger datasets;
-- transparency about data scope and practical memory limits.
+- semantic aliases are broad but not universal for every possible schema;
+- categorical value matching is intentionally limited to columns with at most 500 unique values;
+- ambiguous discount columns may be rejected instead of guessed;
+- arbitrary formulas, joins, forecasting and unrestricted SQL remain out of scope;
+- optional provider schema is still simpler than the new deterministic QuerySpec;
+- exact user benchmark values require the original raw CSV files;
+- Streamlit deployment must be manually retested after merge.
 
-See `docs/full-dataset-explorer-research.md` for links and detailed findings.
+## Required next steps
 
-## Verified validation
+1. Wait for the accuracy-engine PR CI result.
+2. Fix any failing Python-version, Ruff or dependency jobs without weakening validation.
+3. Review the full diff and merge only after green CI.
+4. Reboot/redeploy the Streamlit app.
+5. Retest all 49 questions with the original three CSV files.
+6. Download and compare the new audit against the trusted benchmark.
+7. Record exact pass/fail counts and remaining mismatches in documentation.
+8. Update this handoff with the PR number, CI run and merge SHA.
 
-Historical workflow run 38 on commit `2d40f0ad1a6aaa98905d8c691ee6417d8f1caa07` passed the original project checks.
+## Public/commercial boundary
 
-The `feat/dynamic-full-csv-explorer` branch must receive a new green CI result before merge. Do not describe this feature as merged or deployed until that is verified.
-
-Required checks:
-
-- Python 3.10 tests.
-- Python 3.11 tests.
-- Python 3.12 tests.
-- Ruff application code.
-- Ruff tests.
-- `pip-audit -r requirements.txt`.
-
-## Future full-data improvements
-
-The current feature addresses fixed display truncation, not unlimited-scale data infrastructure. Future work should include:
-
-1. configurable upload-size and memory safeguards;
-2. encoding, delimiter, quote, and malformed-row diagnostics;
-3. chunked ingestion and progress reporting;
-4. DuckDB or Polars-backed analysis for larger datasets;
-5. server-side filtering, sorting, search, and pagination;
-6. CSV, Excel, JSON, and Parquet support;
-7. multiple datasets and validated joins;
-8. downloads for filtered or transformed results;
-9. persistence with privacy, deletion, and retention controls;
-10. accessibility and performance tests across increasing rows and columns.
-
-These improvements must preserve the validated `QuerySpec` execution boundary. Do not introduce unrestricted generated code merely to increase flexibility.
-
-## Presentation tasks
-
-The remaining presentation tasks are documented in detail in `docs/PORTFOLIO_PRESENTATION_GUIDE.md`:
-
-1. Run the Streamlit app locally or through Docker.
-2. Capture a real application screenshot.
-3. Record a 30–60 second demo video or GIF.
-4. Add genuine demo media to the README.
-5. Convert `docs/assets/social-preview.svg` to a suitable PNG.
-6. Upload the PNG through GitHub repository **Settings → General → Social preview**.
-7. Verify the public repository before sharing it with recruiters.
-
-## Decisions that must be preserved
-
-1. Safety takes priority over unrestricted analytical flexibility.
-2. Every execution path validates before deterministic execution.
-3. Provider output is untrusted input.
-4. The no-key rule-based parser remains a first-class mode.
-5. Provider failures fall back safely without exposing details in the UI.
-6. Unknown provider fields are rejected rather than ignored.
-7. Documentation claims require evidence from code, tests, CI, or measured results.
-8. Public portfolio code uses MIT licensing.
-9. A revenue-generating product must use a separate private proprietary repository.
-10. Public code must not contain secrets, customer data, billing logic, production infrastructure details, or commercial-only IP.
-11. No system should be described as completely or 100% secure.
-12. Changes should use branches, pull requests, tests, and review rather than direct unreviewed edits to `main`.
-13. A visible table page is not the same as the analytical dataset; never pass only the displayed page to `ask`.
-14. Never silently truncate successfully loaded rows or columns.
-15. Never claim unlimited file-size support while pandas loads the complete file into memory.
-
-## Known limitations
-
-- The analytical grammar is intentionally narrow.
-- The rule-based parser may choose the first numeric column for an ambiguous question.
-- Type inference is heuristic.
-- Complex joins, arbitrary formulas, forecasting, and unrestricted SQL are out of scope.
-- The current loader requires the complete CSV to fit in memory.
-- Streamlit hosting may impose upload-size and resource limits.
-- Provider timeout, retry, latency, and cost instrumentation remain future work.
-- Dependencies use compatible minimum versions rather than a generated lock file.
-- Docker is for local demonstration, not a complete production deployment.
-- A real screenshot or demo GIF still requires running the application.
-- GitHub social-preview configuration must be completed through repository settings.
-- Accessibility testing and structured parser evaluation datasets remain future work.
-
-## Public versus commercial product policy
-
-This repository demonstrates the concept, safety model, engineering decisions, tests, and local demo. A future paid product should live in a separate private proprietary repository with identity, least privilege, tenant isolation, encryption, secret management, audit logging, monitoring, backup, retention, abuse prevention, incident response, compliance review, and penetration testing.
-
-See `docs/commercialisation-and-private-production.md`.
-
-## Rules for another AI
-
-Before editing, inspect the live branch, open PRs, CI status, implementation, README, security policy, architecture documentation, presentation guide, and `docs/full-dataset-explorer-research.md`. Do not ask the user to repeat information recorded here.
-
-When editing, keep changes reviewable, add tests where behaviour changes, preserve the validated-query boundary, avoid unsupported claims, and never print or commit secrets.
-
-Before finishing, verify tests, linting, and dependency scanning; update this file with facts; and update PR documentation when scope or validation changes.
-
-## Other repositories planned for later standardisation
-
-1. `Meettala/llm-business-insight-assistant`
-2. `Meettala/rag-research-assistant`
-3. `Meettala/jobpilot-ai`
-4. `Meettala/ai-job-market-skill-analyzer`
-5. `Meettala/ml-prediction-app`
-6. `Meettala/meet-tala-portfolio`
+This public repository is a portfolio/reference implementation. A paid production system should use a separate private repository and add identity, tenant isolation, least privilege, encryption, secrets management, monitoring, audit logs, retention controls, backup, abuse prevention, incident response and security testing.
