@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This change replaces first-column guessing and narrow keyword parsing with a typed, schema-aware deterministic parser. The engine still preserves the project's core safety boundary: every question becomes a validated `QuerySpec`, and the executor only performs fixed pandas operations.
+This change replaces first-column guessing and narrow keyword parsing with a typed, schema-aware deterministic parser. The core safety boundary remains unchanged: every question becomes a validated `QuerySpec`, and the executor performs only fixed pandas operations.
 
 ## Supported intent added
 
@@ -38,13 +38,15 @@ No generated expressions are accepted. Formula names are fixed application enums
 
 ## Parser policy
 
-The deterministic parser is now primary because it is reproducible, schema-aware and testable. An optional provider parser is used only as a validated fallback when deterministic intent cannot be represented safely.
+The deterministic parser is primary because it is reproducible, schema-aware and testable. An optional provider parser is used only as a validated fallback when deterministic intent cannot be represented safely.
+
+The optional provider parser now accepts the same typed filters, rankings, date grouping, derived-measure fields and audit metadata as the deterministic `QuerySpec`. Provider output remains untrusted and is rejected when it contains unknown fields, nested filter payloads, invalid types or unsupported columns.
 
 The parser no longer silently selects the first numeric column. Missing or ambiguous required fields fail validation rather than producing a confident but unrelated answer.
 
 ## Benchmark coverage
 
-The approved benchmark now contains 49 questions:
+The approved benchmark contains 49 questions:
 
 - 13 narrow CSV questions;
 - 20 wide CSV questions;
@@ -56,13 +58,14 @@ The three original raw benchmark CSV files are not stored in this public reposit
 
 ## Current validation
 
-Before pushing the branch, 72 focused local tests passed across:
+Before opening the pull request, 85 focused local tests passed across:
 
 - new accuracy-engine behaviour;
 - new accuracy-engine safety controls;
 - existing query validation expectations;
 - existing executor edge cases;
-- deterministic-first pipeline behaviour.
+- deterministic-first pipeline behaviour;
+- expanded optional-LLM schema parsing and hostile nested-value rejection.
 
 GitHub Actions remains the authoritative branch validation before merge.
 
@@ -72,5 +75,4 @@ GitHub Actions remains the authoritative branch validation before merge.
 - semantic aliases are broad but not universal for every possible business schema;
 - ambiguous discount columns may be rejected instead of guessed;
 - arbitrary formulas, joins, forecasting and generated code remain unsupported;
-- exact benchmark results still require the original narrow, wide and long CSV files;
-- optional LLM fallback still uses the older simple provider schema and should not override a valid deterministic specification.
+- exact benchmark results still require the original narrow, wide and long CSV files.
