@@ -40,7 +40,7 @@ No generated expressions are accepted. Formula names are fixed application enums
 
 The deterministic parser is primary because it is reproducible, schema-aware and testable. An optional provider parser is used only as a validated fallback when deterministic intent cannot be represented safely.
 
-The optional provider parser now accepts the same typed filters, rankings, date grouping, derived-measure fields and audit metadata as the deterministic `QuerySpec`. Provider output remains untrusted and is rejected when it contains unknown fields, nested filter payloads, invalid types or unsupported columns.
+The optional provider parser accepts the same typed filters, rankings, date grouping, derived-measure fields and audit metadata as the deterministic `QuerySpec`. Provider output remains untrusted and is rejected when it contains unknown fields, nested filter payloads, invalid types or unsupported columns.
 
 The parser no longer silently selects the first numeric column. Missing or ambiguous required fields fail validation rather than producing a confident but unrelated answer.
 
@@ -54,11 +54,9 @@ The approved benchmark contains 49 questions:
 
 Automated tests cover the intent and execution patterns represented by those questions, including filters, rankings, date logic, derived measures and percentages.
 
-The three original raw benchmark CSV files are not stored in this public repository. Exact end-to-end comparison against their approved numeric answers must therefore be repeated through the deployed app using the owner's original files before claiming 49/49 live accuracy.
+## Validation
 
-## Current validation
-
-Before opening the pull request, 85 focused local tests passed across:
+Before merge, 85 focused local tests passed across:
 
 - new accuracy-engine behaviour;
 - new accuracy-engine safety controls;
@@ -67,12 +65,23 @@ Before opening the pull request, 85 focused local tests passed across:
 - deterministic-first pipeline behaviour;
 - expanded optional-LLM schema parsing and hostile nested-value rejection.
 
-GitHub Actions remains the authoritative branch validation before merge.
+GitHub Actions CI run #56 passed on the final PR #8 head. PR #8 was merged as commit `031a27cd9f6fdf655371ffff9edc2e0f6033f1ad`.
+
+After redeployment, the owner reran all approved questions with the original datasets and exported three fresh application audits. Independent comparison confirmed:
+
+| Dataset | Questions | Passed | Failed |
+|---|---:|---:|---:|
+| `narrow_sample.csv` | 13 | 13 | 0 |
+| `wide_sample.csv` | 20 | 20 | 0 |
+| `long_sample.csv` | 16 | 16 | 0 |
+| **Overall** | **49** | **49** | **0** |
+
+See `docs/LIVE_ACCURACY_VALIDATION_2026-08-02.md` for the validation record and scope statement.
 
 ## Known limits
 
+- the 49/49 result applies to the approved benchmark datasets and questions, not every possible CSV or natural-language request;
 - categorical value matching considers columns with at most 500 unique values;
 - semantic aliases are broad but not universal for every possible business schema;
 - ambiguous discount columns may be rejected instead of guessed;
-- arbitrary formulas, joins, forecasting and generated code remain unsupported;
-- exact benchmark results still require the original narrow, wide and long CSV files.
+- arbitrary formulas, joins, forecasting and generated code remain unsupported.
