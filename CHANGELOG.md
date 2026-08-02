@@ -1,45 +1,55 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented in this file.
 
-The format is based on Keep a Changelog, and the project intends to follow Semantic Versioning once formal releases begin.
+The format is based on Keep a Changelog and the project follows Semantic Versioning for formal releases.
 
 ## [Unreleased]
 
+### Pending
+
+- Add the exact confirmed public Streamlit URL.
+- Capture portfolio screenshots and a short demo video using synthetic data.
+
+## [0.2.0] - 2026-08-02
+
 ### Added
 
-- Continuous integration across Python 3.10, 3.11, and 3.12.
-- Ruff linting and dependency vulnerability auditing with `pip-audit`.
-- `pyproject.toml` packaging and shared tool configuration.
-- Strict parsing for untrusted LLM JSON responses.
-- Offline tests for malformed, fenced, empty, and schema-invalid provider output.
-- Provider failure fallback tests.
-- Schema-aware numeric and date validation.
-- Executor protection for empty data, null-only measures, invalid dates, and non-finite results.
-- Safe user-facing Streamlit error messages.
-- Non-root Docker demo image and `.dockerignore`.
-- Security policy and private vulnerability-reporting guidance.
-- Contribution guidelines focused on preserving constrained execution.
-- Architecture and roadmap documentation.
-- MIT licence and public-versus-private commercialisation policy.
-- Living `AI_HANDOFF.md` continuation context.
-- Portfolio architecture and social-preview SVG assets.
+- Schema-aware deterministic accuracy engine.
+- Typed multiple filters using fixed operators.
+- Grouped highest/lowest ranking.
+- Distinct-value and date-range operations.
+- Year filters and month/year grouping.
+- Conditional counts with percentages.
+- Row context for minimum and maximum transactions.
+- Application-controlled net revenue, gross profit and profit-margin measures.
+- Full-data CSV explorer with pagination and schema profiling.
+- Single-question and multi-question batch modes.
+- Downloadable question-and-answer audit and approved benchmark.
+- User-selected bar, horizontal bar, line, area, scatter, pie and donut charts.
+- Office/Excel-style and additional colour palettes.
+- Live validation report, portfolio copy, media checklist and release notes.
 
 ### Changed
 
-- Reworked the README for recruiters, contributors, and technical reviewers.
-- Clarified that optional LLM parsing remains subordinate to strict response parsing and application-side `QuerySpec` validation.
-- Replaced broad console printing with structured provider-fallback logging.
-- Improved rule-based parser readability and column selection.
-- Limited quality linting to executable source, application, and test code.
+- Replaced first-numeric-column guessing with semantic schema matching.
+- Made deterministic parsing the primary path and optional LLM parsing a constrained fallback.
+- Expanded optional provider JSON to the same typed query fields while preserving strict rejection of unknown or malformed content.
+- Improved README documentation for recruiters and technical reviewers.
+
+### Validated
+
+- 85 focused local tests passed before merge.
+- GitHub Actions CI run #56 passed across Python 3.10, 3.11 and 3.12.
+- Ruff source and test checks passed.
+- Dependency audit passed.
+- Post-deployment audit confirmed **49/49 approved benchmark questions passed** across narrow, wide and 12,000-row datasets.
 
 ### Security
 
-- Numeric operations now reject categorical value columns before execution.
-- Trend requests now require an inferred date column.
-- Unknown LLM-response fields and invalid field types are rejected.
-- Provider failures fall back without exposing secrets in user-facing output.
-- Docker excludes local environment files and runs as a non-root user.
+- Every parser path still requires a validated `QuerySpec`.
+- Filter operators, rankings, date granularities and derived measures remain fixed whitelists.
+- No generated Python, unrestricted SQL, `eval`, `exec` or direct execution of model output was introduced.
 
 ## [0.1.0] - 2026-07-20
 
@@ -50,4 +60,4 @@ The format is based on Keep a Changelog, and the project intends to follow Seman
 - Validated `QuerySpec` execution boundary.
 - Streamlit application.
 - Initial automated tests including injection-resistance checks.
-- Security, privacy, testing, and MVP documentation.
+- Security, privacy, testing and MVP documentation.
