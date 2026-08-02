@@ -55,6 +55,8 @@ def ask(df: pd.DataFrame, question: str) -> dict:
             "value_column": spec.value_column,
             "group_by_column": spec.group_by_column,
             "date_column": spec.date_column,
+            "filter_column": spec.filter_column,
+            "filter_value": spec.filter_value,
         },
         "result": result,
         "explanation": explanation,
