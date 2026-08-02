@@ -69,6 +69,8 @@ The parser now:
 - calculates overall profit margin as a ratio of totals;
 - rejects missing or ambiguous required fields instead of giving an unrelated confident answer.
 
+The optional LLM parser now supports the same typed filters, ranking, date grouping, derived-measure and audit fields. Its JSON remains untrusted and must pass both strict response parsing and `validate_query_spec`.
+
 ### Executor behaviour
 
 The executor performs only fixed operations for:
@@ -88,10 +90,10 @@ The executor performs only fixed operations for:
 
 New files:
 
-- `tests/test_accuracy_engine.py` — 50 behaviour tests.
+- `tests/test_accuracy_engine.py` — behaviour coverage for narrow, wide and long benchmark intents.
 - `tests/test_accuracy_engine_safety.py` — safety tests for new fields.
 
-Before branch push, 72 focused local tests passed, including existing query-validation and executor edge expectations. GitHub Actions is authoritative before merge.
+Before the PR was opened, 85 focused local tests passed, including existing validation and executor edge tests plus the expanded LLM-response schema tests. GitHub Actions is authoritative before merge.
 
 ## Benchmark facts
 
@@ -123,7 +125,6 @@ Do not claim unlimited file size. Pandas still requires the complete CSV to fit 
 - categorical value matching is intentionally limited to columns with at most 500 unique values;
 - ambiguous discount columns may be rejected instead of guessed;
 - arbitrary formulas, joins, forecasting and unrestricted SQL remain out of scope;
-- optional provider schema is still simpler than the new deterministic QuerySpec;
 - exact user benchmark values require the original raw CSV files;
 - Streamlit deployment must be manually retested after merge.
 
