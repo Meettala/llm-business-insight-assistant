@@ -1,5 +1,11 @@
 # v0.2.0 — Verified Accuracy Engine
 
+## Live demo
+
+https://llm-business-insight-assistant-maubk3puyxkcbnjiad4vnr.streamlit.app/
+
+The demo is hosted on Streamlit Community Cloud. Initial loading may take longer after the deployment has been idle.
+
 ## Highlights
 
 - 49/49 approved live benchmark questions passed across narrow, wide and 12,000-row CSV datasets.
@@ -35,3 +41,4 @@ The 49/49 result applies to the approved benchmark questions and datasets. It is
 ## Merge reference
 
 Accuracy-engine PR #8 merged as `031a27cd9f6fdf655371ffff9edc2e0f6033f1ad`.
+Verified release documentation PR #10 merged as `f290f53a46d60e221c0828869ed73270dff16fad`.
