@@ -7,7 +7,7 @@
 - Repository: `Meettala/llm-business-insight-assistant`
 - Default branch: `main`
 - Licence: MIT
-- Current release work branch: `docs/verified-release-v0.2.0`
+- Official live app: `https://llm-business-insight-assistant-maubk3puyxkcbnjiad4vnr.streamlit.app/`
 - Recommended release: `v0.2.0 — Verified Accuracy Engine`
 - Accuracy design record: `docs/ACCURACY_ENGINE_IMPLEMENTATION.md`
 - Live validation record: `docs/LIVE_VALIDATION_REPORT_2026-08-02.md`
@@ -20,8 +20,11 @@
 - PR #6 — single-question and multi-question modes; merge `10a22a663d2c2bfd405c2b8afd5dea5758544960`.
 - PR #7 — fresh-audit workflow and user-selected chart types/colour palettes; merge `20337c89f00618c061280c23d1d4191308c724ea`.
 - PR #8 — schema-aware accuracy engine; merge `031a27cd9f6fdf655371ffff9edc2e0f6033f1ad`.
+- PR #10 — verified v0.2.0 portfolio documentation; merge `f290f53a46d60e221c0828869ed73270dff16fad`.
 - CI run #56 passed on the final accuracy-engine branch.
+- CI run #59 passed on the verified release documentation.
 - Post-deployment live validation confirmed 49/49 approved questions passed.
+- The exact public Streamlit deployment URL is now recorded.
 
 ## Product purpose
 
@@ -89,14 +92,13 @@ Use this exact scope statement:
 - `docs/PORTFOLIO_MEDIA_CHECKLIST.md`
 - `docs/RELEASE_NOTES_v0.2.0.md`
 
-## Remaining release tasks
+## Remaining external tasks
 
-1. Merge the verified-release documentation PR after green CI.
-2. Create GitHub release `v0.2.0` using `docs/RELEASE_NOTES_v0.2.0.md`.
-3. Copy the exact public Streamlit URL from the deployed app or Streamlit Cloud dashboard and add it to README/repository metadata/portfolio.
-4. Capture the screenshots and short demo video described in `docs/PORTFOLIO_MEDIA_CHECKLIST.md`.
-5. Apply the prepared CV, LinkedIn and portfolio wording manually; no LinkedIn connector is available in this workflow.
-6. Then move to the RAG Research Assistant improvement phase.
+1. Create GitHub release `v0.2.0` using `docs/RELEASE_NOTES_v0.2.0.md`.
+2. Add the official live URL to the GitHub repository website field/description manually if the connector cannot edit repository metadata.
+3. Capture the screenshots and short demo video described in `docs/PORTFOLIO_MEDIA_CHECKLIST.md`.
+4. Apply the prepared CV, LinkedIn and portfolio wording manually; no LinkedIn connector is available in this workflow.
+5. Then move to the RAG Research Assistant improvement phase.
 
 ## Known limits
 
@@ -105,7 +107,7 @@ Use this exact scope statement:
 - ambiguous measures may be rejected instead of guessed;
 - arbitrary formulas, joins, forecasting and unrestricted SQL remain out of scope;
 - Pandas requires the complete CSV to fit available memory and hosting limits;
-- the exact public Streamlit URL has not yet been recorded in the repository.
+- Streamlit Community Cloud availability and cold-start behaviour are controlled by the hosting platform.
 
 ## Public/commercial boundary
 
