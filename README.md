@@ -4,6 +4,12 @@ A safety-first analytics assistant that turns plain-English business questions i
 
 > Every request must resolve to a validated `QuerySpec`. Natural-language input and optional model output never receive authority to execute arbitrary Python, SQL or pandas expressions.
 
+## Live demo
+
+**Try the deployed application:** [Open the LLM Business Insight Assistant](https://llm-business-insight-assistant-maubk3puyxkcbnjiad4vnr.streamlit.app/)
+
+The public demo is hosted on Streamlit Community Cloud. Initial loading may take longer when the free deployment has been idle.
+
 ## Verified result
 
 **Live validation completed on 2 August 2026: 49 of 49 approved benchmark questions passed.**
@@ -109,10 +115,6 @@ Key modules:
 - `src/insight/explain.py` — written answers generated from computed results.
 - `src/insight/pipeline.py` — mandatory parsing, validation, execution and explanation path.
 - `streamlit_app/app.py` — interactive application, charts and audit export.
-
-## Live demo
-
-The application has been deployed and live-tested, but the exact public Streamlit URL is not yet stored in this repository. Add it only after copying the confirmed address directly from the deployed app or Streamlit Cloud dashboard.
 
 ## Quick start
 

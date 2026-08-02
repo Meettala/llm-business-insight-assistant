@@ -1,14 +1,21 @@
 # Portfolio, CV and LinkedIn Copy
 
+## Official links
+
+- Live application: https://llm-business-insight-assistant-maubk3puyxkcbnjiad4vnr.streamlit.app/
+- GitHub repository: https://github.com/Meettala/llm-business-insight-assistant
+
 ## CV project entry
 
 **LLM Business Insight Assistant — Python, Pandas, Streamlit, Applied AI**
 
 Built and deployed a safety-first natural-language CSV analytics application. Designed a schema-aware query engine with validated multi-filter analysis, grouped ranking, date intelligence, conditional percentages and application-controlled derived business metrics. Preserved a strict `QuerySpec` execution boundary with no generated Python, unrestricted SQL, `eval` or `exec`. Achieved **49/49 correct answers** on a live approved benchmark across narrow, wide and 12,000-row CSV datasets.
 
+**Live demo:** https://llm-business-insight-assistant-maubk3puyxkcbnjiad4vnr.streamlit.app/
+
 ## Short CV bullet version
 
-- Built a safety-first natural-language CSV analytics app using Python, Pandas and Streamlit; achieved 49/49 correct results on a verified live benchmark.
+- Built and deployed a safety-first natural-language CSV analytics app using Python, Pandas and Streamlit; achieved 49/49 correct results on a verified live benchmark.
 - Implemented schema-aware parsing, multiple filters, grouped rankings, date analysis and validated derived metrics without arbitrary code or SQL execution.
 - Added Python 3.10–3.12 CI, adversarial tests, dependency auditing, downloadable answer audits and user-controlled charts.
 
@@ -20,6 +27,8 @@ Key capabilities include full-dataset exploration, single and batch questions, m
 
 After a live accuracy-engine upgrade, the deployed app answered all **49 approved benchmark questions correctly** across three CSV datasets, including a 12,000-row dataset. The result is documented honestly as benchmark-specific rather than universal accuracy.
 
+**Try the live app:** https://llm-business-insight-assistant-maubk3puyxkcbnjiad4vnr.streamlit.app/
+
 ## Portfolio card copy
 
 **LLM Business Insight Assistant**
@@ -27,6 +36,8 @@ After a live accuracy-engine upgrade, the deployed app answered all **49 approve
 A safety-first applied AI analytics tool that converts natural-language business questions into validated, deterministic CSV insights. Verified at 49/49 correct answers on the approved live benchmark.
 
 **Stack:** Python, Pandas, Streamlit, Altair, Pytest, GitHub Actions, Docker
+
+**Live demo:** https://llm-business-insight-assistant-maubk3puyxkcbnjiad4vnr.streamlit.app/
 
 ## Interview explanation
 
