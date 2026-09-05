@@ -4,15 +4,15 @@ A safety-first analytics assistant that turns plain-English business questions i
 
 > Every request must resolve to a validated `QuerySpec`. Natural-language input and optional model output never receive authority to execute arbitrary Python, SQL or pandas expressions.
 
-## Live demo
+## Demo status
 
-**Try the deployed application:** [Open the LLM Business Insight Assistant](https://llm-business-insight-assistant-maubk3puyxkcbnjiad4vnr.streamlit.app/)
+**Recorded Streamlit deployment:** [Open the LLM Business Insight Assistant](https://llm-business-insight-assistant-maubk3puyxkcbnjiad4vnr.streamlit.app/)
 
-The public demo is hosted on Streamlit Community Cloud. Initial loading may take longer when the free deployment has been idle.
+The deployed application was successfully used for the 2 August 2026 live benchmark. During the 5 September 2026 JR02 review, the available execution environment could not reach Streamlit, so this URL is retained as the recorded deployment rather than presented as a freshly smoke-tested current demo. Re-verify the seven-step workflow in `docs/PORTFOLIO_MEDIA_CHECKLIST.md` before treating current availability as confirmed.
 
-## Verified result
+## Verified benchmark
 
-**Live validation completed on 2 August 2026: 49 of 49 approved benchmark questions passed.**
+**Historical live validation completed on 2 August 2026: 49 of 49 approved benchmark questions passed.**
 
 | Dataset | Questions | Passed | Accuracy |
 |---|---:|---:|---:|
@@ -22,6 +22,16 @@ The public demo is hosted on Streamlit Community Cloud. Initial loading may take
 | **Overall** | **49** | **49** | **100%** |
 
 This is verified performance for the approved benchmark datasets and questions, not a claim of universal accuracy for every possible CSV or business request. See [`docs/LIVE_VALIDATION_REPORT_2026-08-02.md`](docs/LIVE_VALIDATION_REPORT_2026-08-02.md).
+
+The approved question/answer benchmark is committed at `data/validation/approved_question_answer_benchmark.csv`. The original three raw benchmark CSV files are not public repository assets, so the exact 49-question live run cannot currently be reproduced from this repository alone. The automated tests cover the same supported intent classes on committed synthetic fixtures without replacing that historical live result.
+
+## Why the architecture avoids generated code
+
+A model is useful for interpreting intent, but giving model output authority to execute generated Python, SQL or pandas expressions would unnecessarily combine language-model uncertainty with code-execution risk. This project separates interpretation from authority:
+
+**natural-language request → typed `QuerySpec` → application validation → fixed pandas executor**
+
+The deterministic parser is primary. An optional provider is only a fallback parser and can return structured intent; its output is still untrusted and must pass the same application-side validation before execution.
 
 ## Portfolio highlights
 
@@ -83,6 +93,8 @@ Unsupported or ambiguous questions fail safely rather than being converted into 
 
 ## Architecture
 
+![Safety-first architecture: interpretation is untrusted, validation controls fixed pandas execution](docs/assets/architecture.svg)
+
 ```text
 User question + uploaded CSV
         |
@@ -142,7 +154,8 @@ source .venv/bin/activate
 Install and run:
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
+python -m pip check
 streamlit run streamlit_app/app.py
 ```
 
@@ -155,22 +168,29 @@ docker build -t llm-business-insight-assistant .
 docker run --rm -p 8501:8501 llm-business-insight-assistant
 ```
 
-Open `http://localhost:8501`. The image runs as a non-root user and excludes local environment files, tests and private configuration.
+Open `http://localhost:8501`. The image runs as a non-root user, includes the bundled sample dataset and exposes a Streamlit healthcheck. JR02 CI also builds the image and exercises the health endpoint so the documented container path is verified rather than assumed.
 
 ## Optional provider parsing
 
-Add either `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` at runtime. Provider output is treated as untrusted JSON and must pass strict field validation plus application-side `QuerySpec` validation. Uploaded row values are not included in the current provider prompt.
+Add either `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` at runtime. Provider output is treated as untrusted JSON and must pass strict field validation plus application-side `QuerySpec` validation. Uploaded row values are not included in the current provider prompt; the provider receives the question and the available column names.
 
 ## Testing
 
 ```bash
-pip install -r requirements-dev.txt
+python -m pip install -r requirements-dev.txt
+python -m pip check
 python -m pytest tests/ -q
 ruff check src streamlit_app tests
 pip-audit -r requirements.txt
 ```
 
-The accuracy-engine release passed 85 focused local tests and GitHub Actions CI run #56 across Python 3.10, 3.11 and 3.12 before merge. The deployed app then passed all 49 approved live benchmark questions.
+On 2 August 2026, the accuracy-engine implementation passed 85 focused local tests and GitHub Actions CI run #56 across Python 3.10, 3.11 and 3.12 before merge. The deployed app then passed all 49 approved live benchmark questions. JR02 generates a new current CI result rather than treating those historical checks as current verification.
+
+## Version and release status
+
+The repository code/package version is **0.2.0**, matching the merged schema-aware accuracy engine and the existing changelog/release notes.
+
+`docs/RELEASE_NOTES_v0.2.0.md` contains prepared release notes. A formal GitHub `v0.2.0` Release has not yet been published, so the repository does not claim one exists.
 
 ## Example questions
 
@@ -195,12 +215,13 @@ The accuracy-engine release passed 85 focused local tests and GitHub Actions CI 
 - categorical matching intentionally limits very high-cardinality columns;
 - ambiguous discount fields may be rejected instead of guessed;
 - joins, forecasting, arbitrary formulas and unrestricted SQL are out of scope;
-- Pandas requires the complete uploaded file to fit available memory;
+- pandas requires the complete uploaded file to fit available memory;
+- the original live-benchmark input CSVs are not committed, limiting exact public reproduction of the 2 August 49/49 run;
 - this public repository is a portfolio/reference implementation, not a governed multi-tenant enterprise service.
 
-## Privacy and commercial boundary
+## Privacy and production boundary
 
-CSV processing remains local when the deterministic parser is used. Review provider data-handling terms before enabling optional model parsing. A paid production product should use a separate private repository with identity, tenant isolation, encryption, monitoring, retention controls and incident-response processes.
+CSV processing remains local when the deterministic parser is used. Review provider data-handling terms before enabling optional model parsing. A governed multi-tenant deployment would additionally require identity, tenant isolation, encryption, monitoring, retention controls and incident-response processes.
 
 ## Licence and author
 
