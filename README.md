@@ -221,7 +221,7 @@ The repository code/package version is **0.2.0**, matching the merged schema-awa
 
 ## Privacy and production boundary
 
-CSV processing remains local when the deterministic parser is used. Review provider data-handling terms before enabling optional model parsing. A governed multi-tenant deployment would additionally require identity, tenant isolation, encryption, monitoring, retention controls and incident-response processes.
+Uploaded CSV rows are processed inside the application runtime. The deterministic path makes no model-provider call. When optional provider parsing is enabled, the application sends the user question and available column names, but not uploaded row values. Review provider data-handling terms before enabling optional model parsing. A governed multi-tenant deployment would additionally require identity, tenant isolation, encryption, monitoring, retention controls and incident-response processes.
 
 ## Licence and author
 
